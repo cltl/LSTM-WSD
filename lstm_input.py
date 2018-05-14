@@ -61,6 +61,8 @@ for corpus in exp_config['corpora']:
                     stats[annotation]['total'] += 1
 
 
+pandas.to_pickle(stats, exp_config['annotated_data_stats'])
+
 annotated_data_stats_path = os.path.join(exp_config['exp_output_folder'],
                                          'annotated_data_stats.tsv')
 
@@ -74,7 +76,6 @@ with open(annotated_data_stats_path, 'w') as outfile:
             one_row.append(str(freqs[corpus]))
 
         outfile.write('\t'.join(one_row) + '\n')
-
 
 
 

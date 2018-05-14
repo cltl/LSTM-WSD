@@ -1,6 +1,6 @@
 {"label": "synset---se2---semcor",
 "level": "synset",
-"batch_size" : 400,
+"batch_size" : 100,
 "competition": "se2",
 "wn_version": "30",
 "corpora": ["semcor"],

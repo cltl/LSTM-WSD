@@ -46,9 +46,15 @@ for instance_id, \
 
     num_target_embeddings += 1
 
+stats = pandas.read_pickle(exp_config['annotated_data_stats'])
 
 meaning2avg_embedding = dict()
 for meaning, embeddings in meaning2context_embds.items():
+
+    total = stats[meaning]['total']
+    found = len(embeddings)
+    assert total == found, '%s (%s vs %s)' % (meaning, total, found)
+
     total = sum([embedding[2]
                  for embedding in embeddings])
     average = total / len(embeddings)

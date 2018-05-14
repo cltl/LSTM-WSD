@@ -47,3 +47,6 @@ def update_settings_with_paths(main_config, exp_config):
     exp_config['meanings_path'] = os.path.join(exp_config['exp_output_folder'],
                                                'meanings.p')
 
+    exp_config['annotated_data_stats'] = os.path.join(exp_config['exp_output_folder'],
+                                                      'annotated_data_stats.p')
+

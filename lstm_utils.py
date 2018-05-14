@@ -24,7 +24,7 @@ def ctx_embd_input(sentence):
     annotation_indices = []
     tokens = []
     for index, token in enumerate(sent_split):
-        token, *annotation = token.split('---')
+        token, *annotation = token.rsplit('---')
         tokens.append(token)
 
         if annotation:
