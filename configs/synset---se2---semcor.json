@@ -1,0 +1,8 @@
+{"label": "synset---se2---semcor",
+"level": "synset",
+"batch_size" : 400,
+"competition": "se2",
+"wn_version": "30",
+"corpora": ["semcor"],
+"label_propagation": false,
+"averaging_technique": "normal"}

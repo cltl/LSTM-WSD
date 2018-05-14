@@ -1,0 +1,6 @@
+{
+  "vocab_path" : "",
+  "model_path" : "",
+  "experiments_folder" : "output",
+  "semcor" : "resources/semcor"
+}
