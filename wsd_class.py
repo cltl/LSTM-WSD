@@ -3,6 +3,7 @@ import tensorflow as tf
 from datetime import datetime
 from itertools import islice
 import numpy as np
+from scipy import spatial
 
 
 class WsdLstm:
@@ -142,3 +143,69 @@ class WsdLstm:
                                                                                    identifiers,
                                                                                    target_embeddings):
                     yield (instance_id, target_index, annotation, target_embedding)
+
+
+    def wsd_on_test_instance(self,
+                             sentence_tokens,
+                             target_index,
+                             candidate_meanings,
+                             meaning_embeddings,
+                             debug=0):
+        """
+        perform wsd on test instance from wsd competition
+
+        :param list sentence_tokens: list of my_classes.Token objects
+        :param int target_index: index of target token
+        :param list candidate_meanings: list of meaning identifiers,
+        each being a candidate meaning of the target token
+        :param dict meaning_embeddings: mapping meaning identifier -> embedding
+        :param int debug: debug level
+
+        :rtype: tuple
+        :return: (wsd_strategy, chosen_meaning, meaning2cosine)
+        """
+        sentence_as_ids = [self.vocab.get(token_obj.text) or self.vocab['<unkn>']
+                           for token_obj in sentence_tokens]
+        sentence_as_ids[target_index] = self.vocab['<target>']
+
+        target_embeddings = self.sess.run(self.predicted_context_embs,
+                                          {self.x: [sentence_as_ids],
+                                           self.lens: [len(sentence_as_ids)]})
+
+        target_embedding = target_embeddings[0]
+
+
+        highest_meanings = []
+        highest_conf = -100
+        meaning2confidence = dict()
+
+        for meaning_id in candidate_meanings:
+            if meaning_id in meaning_embeddings:
+                cand_embedding = meaning_embeddings[meaning_id]
+                sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
+
+                if sim == highest_conf:
+                    highest_meanings.append(meaning_id)
+                elif sim > highest_conf:
+                    highest_meanings = [meaning_id]
+                    highest_conf = sim
+
+                meaning2confidence[meaning_id] = sim
+
+            else:
+                if debug >= 2:
+                    print('there is no synset embedding for', meaning_id)
+
+                meaning2confidence[meaning_id] = 0.0
+
+        wsd_strategy = 'lstm'
+        if len(highest_meanings) >= 1:
+            highest_meaning = highest_meanings[0]
+        else:
+            highest_meaning = candidate_meanings[0]
+
+        if len(candidate_meanings) == 1:
+            wsd_strategy = 'monosemous'
+
+
+        return (wsd_strategy, highest_meaning, meaning2confidence)
