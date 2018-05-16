@@ -16,7 +16,9 @@ def update_settings_with_paths(main_config, exp_config):
 
     if os.path.exists(exp_config['exp_output_folder']):
         shutil.rmtree(exp_config['exp_output_folder'])
-    os.makedirs(exp_config['exp_output_folder'], exist_ok=True)
+        os.makedirs(exp_config['exp_output_folder'], exist_ok=True)
+    else:
+        os.mkdir(exp_config['exp_output_folder'])
 
     # input wsd df
     competition = exp_config['competition']
@@ -49,4 +51,14 @@ def update_settings_with_paths(main_config, exp_config):
 
     exp_config['annotated_data_stats'] = os.path.join(exp_config['exp_output_folder'],
                                                       'annotated_data_stats.p')
+
+    exp_config['system_path'] = os.path.join(exp_config['exp_output_folder'],
+                                             'system.key')
+
+    exp_config['key_path'] = main_config['%s_key' % competition]
+
+    exp_config['json_results_path'] = os.path.join(exp_config['exp_output_folder'],
+                                                   'wsd_framework_results.json')
+
+
 

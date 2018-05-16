@@ -47,6 +47,7 @@ def generate_training_instances_v2(sentence_tokens,
             a_sentence = []
             for index, token in enumerate(sentence_tokens):
 
+                
                 if index == target_index:
                     a_sentence.append(token + '---' + token_annotation)
                 else:

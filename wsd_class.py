@@ -179,6 +179,10 @@ class WsdLstm:
         highest_conf = -100
         meaning2confidence = dict()
 
+        if debug >= 2:
+            print()
+            print('##')
+
         for meaning_id in candidate_meanings:
             if meaning_id in meaning_embeddings:
                 cand_embedding = meaning_embeddings[meaning_id]
@@ -194,7 +198,7 @@ class WsdLstm:
 
             else:
                 if debug >= 2:
-                    print('there is no synset embedding for', meaning_id)
+                    print('there is no embedding for', meaning_id)
 
                 meaning2confidence[meaning_id] = 0.0
 
@@ -203,9 +207,16 @@ class WsdLstm:
             highest_meaning = highest_meanings[0]
         else:
             highest_meaning = candidate_meanings[0]
+            wsd_strategy = 'mfs_fallback'
 
         if len(candidate_meanings) == 1:
             wsd_strategy = 'monosemous'
 
+
+        if debug >= 2:
+            rank = candidate_meanings.index(highest_meaning)
+            print()
+            print(candidate_meanings)
+            print(rank, wsd_strategy)
 
         return (wsd_strategy, highest_meaning, meaning2confidence)

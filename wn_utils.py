@@ -54,7 +54,7 @@ def synset2identifier(synset, wn_version):
     offset_8_char = offset.zfill(8)
 
     pos = synset.pos()
-    if pos == 'j':
+    if pos in {'j', 's'}:
         pos = 'a'
 
     identifier = 'eng-{wn_version}-{offset_8_char}-{pos}'.format_map(locals())
@@ -76,18 +76,42 @@ def get_synset2sensekeys(wn, candidates, wn_version, target_lemma, pos, debug=Fa
 
     for synset in candidates:
         sy_id = synset2identifier(synset, wn_version)
+
+        key = None
+        strategy = None
+
         for lemma in synset.lemmas():
-            if lemma.key().startswith(target_lemma.lower() + '%'):
-                sensekeys.append(lemma.key())
+            if lemma.name() == target_lemma:
+                strategy = 'lemma match'
+                key = lemma.key()
 
-                synset2sensekeys[sy_id] = lemma.key()
-                break
+            elif lemma.name().lower() == target_lemma.lower():
+                strategy = 'lower case'
+                key = lemma.key()
 
-        if debug:
-            if sy_id not in synset2sensekeys:
-                print('no sensekey found for %s %s wn %s sy_id %s' % (target_lemma,
-                                                                      pos,
-                                                                      wn_version,
-                                                                      sy_id))
+        if not key:
+            for lemma in synset.lemmas():
+                if target_lemma.startswith(lemma.name()):
+                    strategy = 'target lemma starts with lemma'
+                    key = lemma.key()
+
+
+        if not key:
+            print()
+            print('no sensekey found for %s %s wn %s sy_id %s' % (target_lemma,
+                                                                  pos,
+                                                                  wn_version,
+                                                                  sy_id))
+            print('falling back on picking first sensekey from first lemma in synset.lemmas()')
+
+        if not key:
+            for lemma in synset.lemmas():
+                strategy = 'pick first key'
+                key = lemma.key()
+                break 
+
+
+        sensekeys.append(key)
+        synset2sensekeys[sy_id] = key
 
     return sensekeys, synset2sensekeys
