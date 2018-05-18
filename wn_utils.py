@@ -84,16 +84,19 @@ def get_synset2sensekeys(wn, candidates, wn_version, target_lemma, pos, debug=Fa
             if lemma.name() == target_lemma:
                 strategy = 'lemma match'
                 key = lemma.key()
+                break
 
             elif lemma.name().lower() == target_lemma.lower():
                 strategy = 'lower case'
                 key = lemma.key()
+                break
 
         if not key:
             for lemma in synset.lemmas():
                 if target_lemma.startswith(lemma.name()):
                     strategy = 'target lemma starts with lemma'
                     key = lemma.key()
+                    break
 
 
         if not key:

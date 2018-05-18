@@ -32,33 +32,34 @@ exp_config = json.load(open(path_exp_config))
 relevant_meanings = pandas.read_pickle(exp_config['candidates_path'])
 stats = dict()
 
-for corpus in exp_config['corpora']:
 
-    for relevant_meaning in relevant_meanings:
-        if relevant_meaning not in stats:
-            stats[relevant_meaning] = defaultdict(int)
+with open(exp_config['lstm_input'], 'w') as outfile:
+    for corpus in exp_config['corpora']:
 
-    instances_path = os.path.join(main_config[corpus], 'instances.bin')
-    instances = pickle.load(open(instances_path, 'rb'))
+        for relevant_meaning in relevant_meanings:
+            if relevant_meaning not in stats:
+                stats[relevant_meaning] = defaultdict(int)
 
-    meaning2ids_path = os.path.join(main_config[corpus],
-                                    '%s_index.bin' % exp_config['level'])
-    meaning2ids = pickle.load(open(meaning2ids_path, 'rb'))
+        instances_path = os.path.join(main_config[corpus], 'instances.bin')
+        instances = pickle.load(open(instances_path, 'rb'))
 
-    # relevant ids
-    relevent_ids = set()
-    for a_meaning, ids in meaning2ids.items():
-        if a_meaning in relevant_meanings:
-            relevent_ids.update(ids)
+        meaning2ids_path = os.path.join(main_config[corpus],
+                                        '%s_index.bin' % exp_config['level'])
+        meaning2ids = pickle.load(open(meaning2ids_path, 'rb'))
 
-    with open(exp_config['lstm_input'], 'w') as outfile:
-        for instance_id, instance_obj in instances.items():
-            if instance_id in relevent_ids:
-                for annotation, training_example in instance_obj.sent_in_lstm_format(level=exp_config['level'],
-                                                                                     only_keep=relevant_meanings):
-                    outfile.write(instance_id + '\t' + training_example + '\n')
-                    stats[annotation][corpus] += 1
-                    stats[annotation]['total'] += 1
+        # relevant ids
+        relevent_ids = set()
+        for a_meaning, ids in meaning2ids.items():
+            if a_meaning in relevant_meanings:
+                relevent_ids.update(ids)
+
+            for instance_id, instance_obj in instances.items():
+                if instance_id in relevent_ids:
+                    for annotation, training_example in instance_obj.sent_in_lstm_format(level=exp_config['level'],
+                                                                                         only_keep=relevant_meanings):
+                        outfile.write(instance_id + '\t' + training_example + '\n')
+                        stats[annotation][corpus] += 1
+                        stats[annotation]['total'] += 1
 
 
 pandas.to_pickle(stats, exp_config['annotated_data_stats'])
