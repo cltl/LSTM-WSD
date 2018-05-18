@@ -11,21 +11,22 @@ class WsdLstm:
 
     :ivar str model_path: path to lstm model
     :ivar str vocab_path: path to vocabulary file
+    :ivar tf.Session: tf session object
     :ivar int debug_value: verbosity of debugging info
     """
 
     def __init__(self,
                  model_path,
                  vocab_path,
+                 sess,
                  debug_value=0):
         self.debug_value = debug_value
-        self.sess = tf.InteractiveSession()
 
         self.vocab = self.load_vocab(vocab_path)
 
         self.x, \
         self.predicted_context_embs, \
-        self.lens = self.load_model(model_path)
+        self.lens = self.load_model(model_path, sess)
 
     def load_vocab(self, vocab_path):
         """
@@ -47,11 +48,12 @@ class WsdLstm:
 
         return vocab
 
-    def load_model(self, model_path):
+    def load_model(self, model_path, sess):
         """
         load lstm model
 
         :param str model_path: path to model
+        :param tf.Session: tensorflow session
 
         :rtype: tuple (all of type tensorflow.python.framework.ops.Tensor)
         :return: (x, predicted_context_embs, lens)
@@ -60,31 +62,36 @@ class WsdLstm:
             print(datetime.now(), 'loading model {model_to_use} from {model_path}'.format_map(locals()))
 
         saver = tf.train.import_meta_graph(model_path + '.meta', clear_devices=True)
-        saver.restore(self.sess, model_path)
-        x, predicted_context_embs, lens = load_tensors(self.sess)
+        saver.restore(sess, model_path)
+        x, predicted_context_embs, lens = load_tensors(sess)
 
         if self.debug_value >= 1:
             print(datetime.now(), 'loaded model {model_to_use} from {model_path}'.format_map(locals()))
 
         return x, predicted_context_embs, lens
 
-    def apply_model(self, sentences_as_ids, sentence_lens):
+    def apply_model(self, sess, sentences_as_ids, sentence_lens):
         """
         apply
+
+        :param tf.Session sess: tensorflow session
+        :param list sentences_as_ids: list of list of ids (representing tokens)
+        :param list sentence_lens: list of lengths of each sentence in sentences_as_ids
 
         :rtype: iterable
         :return: iterable of target embeddings
         """
-        target_embeddings = self.sess.run(self.predicted_context_embs,
-                                          {self.x: sentences_as_ids,
-                                           self.lens: sentence_lens})
+        target_embeddings = sess.run(self.predicted_context_embs,
+                                     {self.x: sentences_as_ids,
+                                      self.lens: sentence_lens})
 
         return target_embeddings
 
 
-    def apply_on_lstm_input_file(self, lstm_input_path, batch_size):
+    def apply_on_lstm_input_file(self, sess, lstm_input_path, batch_size):
         """
 
+        :param tf.Session: tensorflow session
         :param str lstm_input_path: path of lstm input
         e.g sentences such as
         the man meets---MEANING women
@@ -134,9 +141,9 @@ class WsdLstm:
                     length_diff = max_length - len(_list)
                     [_list.append(self.vocab['<unkn>']) for _ in range(length_diff)]
 
-                target_embeddings = self.sess.run(self.predicted_context_embs,
-                                                  {self.x: annotated_sentences,
-                                                   self.lens: sentence_lens})
+                target_embeddings = sess.run(self.predicted_context_embs,
+                                             {self.x: annotated_sentences,
+                                             self.lens: sentence_lens})
 
                 for instance_id, target_index, annotation, target_embedding in zip(instance_ids,
                                                                                    target_indices,
@@ -146,6 +153,7 @@ class WsdLstm:
 
 
     def wsd_on_test_instance(self,
+                             sess,
                              sentence_tokens,
                              target_index,
                              candidate_meanings,
@@ -154,6 +162,7 @@ class WsdLstm:
         """
         perform wsd on test instance from wsd competition
 
+        :param tf.Session sess: tensorflow session
         :param list sentence_tokens: list of my_classes.Token objects
         :param int target_index: index of target token
         :param list candidate_meanings: list of meaning identifiers,
@@ -168,9 +177,9 @@ class WsdLstm:
                            for token_obj in sentence_tokens]
         sentence_as_ids[target_index] = self.vocab['<target>']
 
-        target_embeddings = self.sess.run(self.predicted_context_embs,
-                                          {self.x: [sentence_as_ids],
-                                           self.lens: [len(sentence_as_ids)]})
+        target_embeddings = sess.run(self.predicted_context_embs,
+                                     {self.x: [sentence_as_ids],
+                                      self.lens: [len(sentence_as_ids)]})
 
         target_embedding = target_embeddings[0]
 

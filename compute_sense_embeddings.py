@@ -19,6 +19,7 @@ import pandas
 import os
 from docopt import docopt
 from collections import defaultdict
+import tensorflow as tf
 from wsd_class import WsdLstm
 
 arguments = docopt(__doc__)
@@ -30,21 +31,24 @@ exp_config = json.load(open(path_exp_config))
 
 meaning2context_embds = defaultdict(list)
 
-wsd_lstm_obj = WsdLstm(model_path=main_config['model_path'],
-                       vocab_path=main_config['vocab_path'])
 
+with tf.Session() as sess:  # your session object
+    wsd_lstm_obj = WsdLstm(model_path=main_config['model_path'],
+                           vocab_path=main_config['vocab_path'],
+                           sess=sess)
 
-num_target_embeddings = 0
+    num_target_embeddings = 0
 
-for instance_id, \
-    target_index, \
-    annotation, \
-    target_embedding in wsd_lstm_obj.apply_on_lstm_input_file(lstm_input_path=exp_config['lstm_input'],
-                                                              batch_size=exp_config['batch_size']):
+    for instance_id, \
+        target_index, \
+        annotation, \
+        target_embedding in wsd_lstm_obj.apply_on_lstm_input_file(sess=sess,
+                                                                  lstm_input_path=exp_config['lstm_input'],
+                                                                  batch_size=exp_config['batch_size']):
 
-    meaning2context_embds[annotation].append((instance_id, target_index, target_embedding))
+        meaning2context_embds[annotation].append((instance_id, target_index, target_embedding))
 
-    num_target_embeddings += 1
+        num_target_embeddings += 1
 
 stats = pandas.read_pickle(exp_config['annotated_data_stats'])
 
