@@ -28,6 +28,7 @@ def update_wsd_df(wsd_df, wn_version, level):
     extract relevant information for experiment:
     a) add column candidate_meanings for each row
     b) compute set of all candidate meanings
+    c) compute set of all polysemous meanings
 
     :param pandas.core.frame.DataFrame wsd_df: a wsd competition dataframe
     :param str wn_version: supported: '30'
@@ -35,6 +36,7 @@ def update_wsd_df(wsd_df, wn_version, level):
 
     :rtype: tuple
     :return: (wsd_df,
+              all_polysemous_meanings,
               all_candidate_meanings,
     """
     columns_to_add = ['candidate_meanings', 'synset2sensekey']
@@ -42,8 +44,10 @@ def update_wsd_df(wsd_df, wn_version, level):
     for key in columns_to_add:
         wsd_df[key] = [None for _ in range(len(wsd_df))]
 
-    all_synsets = set()  # synsets that are candidates of lemmas
-    all_sensekeys = set()  # sensekeys that are candidates of lemmas
+    all_polysemous_synsets = set()    # synsets that are candidates of polysemous lemmas
+    all_synsets = set()               # synsets that are candidates of lemmas
+    all_polysemous_sensekeys = set()  # sensekeys that are candidates of polysemous lemmas
+    all_sensekeys = set()             # sensekeys that are candidates of lemmas
 
     for row in wsd_df.itertuples():
         row_index = row.Index
@@ -61,18 +65,21 @@ def update_wsd_df(wsd_df, wn_version, level):
                       for candidate in candidates]
 
         all_synsets.update(synset_ids)
+        if len(synset_ids) >= 2:
+            all_polysemous_synsets.update(synset_ids)
 
         sensekeys, synset2sensekeys = wn_utils.get_synset2sensekeys(wn,
                                                   candidates,
                                                   wn_version,
                                                   row.target_lemma,
                                                   row.pos,
-                                                  debug=True)
+                                                  debug=False)
 
-        for synset_id in synset_ids:
-            assert synset_id in synset2sensekeys, '%s has no sensekey associated with it' % synset_id
+        assert synset2sensekeys
 
         all_sensekeys.update(sensekeys)
+        if len(sensekeys) >= 2:
+            all_polysemous_sensekeys.update(sensekeys)
 
         if not any(lexkey in row.lexkeys
                    for lexkey in sensekeys):
@@ -89,11 +96,13 @@ def update_wsd_df(wsd_df, wn_version, level):
 
 
     if level == 'synset':
+        all_polysemous_candidate_meanings = all_polysemous_synsets
         all_candidate_meanings = all_synsets
     elif level == 'sensekey':
+        all_polysemous_candidate_meanings = all_polysemous_sensekeys
         all_candidate_meanings = all_sensekeys
 
-    return wsd_df, all_candidate_meanings
+    return wsd_df, all_polysemous_candidate_meanings, all_candidate_meanings
 
 
 arguments = docopt(__doc__)
@@ -112,12 +121,17 @@ wn_version = exp_config['wn_version']
 level = exp_config['level']
 
 
-wsd_df, all_candidate_meanings = update_wsd_df(wsd_df=wsd_df,
-                                                wn_version=wn_version,
-                                                level=level)
+wsd_df, all_polysemous_candidate_meanings, all_candidate_meanings = update_wsd_df(wsd_df=wsd_df,
+                                                                                  wn_version=wn_version,
+                                                                                  level=level)
+
+assert len(all_polysemous_candidate_meanings) < len(all_candidate_meanings)
 
 pandas.to_pickle(wsd_df,
                  exp_config['output_wsd_df_path'])
+
+pandas.to_pickle(all_polysemous_candidate_meanings,
+                 exp_config['polysemous_candidates_path'])
 
 pandas.to_pickle(all_candidate_meanings,
                  exp_config['candidates_path'])
@@ -127,6 +141,7 @@ stats_path = os.path.join(exp_config['exp_output_folder'],
                           'preprocess_stats.txt')
 with open(stats_path, 'w') as outfile:
     outfile.write('# rows wsd df: %s\n' % len(wsd_df))
+    outfile.write('# polysemous candidate meanings: %s\n' % len(all_candidate_meanings))
     outfile.write('# candidate meanings: %s\n' % len(all_candidate_meanings))
 
 

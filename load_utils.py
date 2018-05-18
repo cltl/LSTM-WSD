@@ -33,8 +33,12 @@ def update_settings_with_paths(main_config, exp_config):
 
     # candidate meanings
     candidates_path = os.path.join(exp_config['exp_output_folder'],
-                                  'candidate_meanings.p')
-    exp_config['candidates_path'] = candidates_path
+                                  'polysemous_candidates_path.p')
+
+    exp_config['polysemous_candidates_path'] = candidates_path
+
+    exp_config['candidates_path'] = os.path.join(exp_config['exp_output_folder'],
+                                                 'candidates_path.p')
 
 
     # lstm input path
