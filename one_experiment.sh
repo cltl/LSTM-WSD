@@ -48,7 +48,7 @@ then
     exit 1
 fi
 
-sleep 10 
+sleep 60
 
 #perform wsd
 python perform_wsd.py --exp=$experiment

@@ -141,7 +141,7 @@ stats_path = os.path.join(exp_config['exp_output_folder'],
                           'preprocess_stats.txt')
 with open(stats_path, 'w') as outfile:
     outfile.write('# rows wsd df: %s\n' % len(wsd_df))
-    outfile.write('# polysemous candidate meanings: %s\n' % len(all_candidate_meanings))
+    outfile.write('# polysemous candidate meanings: %s\n' % len(all_polysemous_candidate_meanings))
     outfile.write('# candidate meanings: %s\n' % len(all_candidate_meanings))
 
 

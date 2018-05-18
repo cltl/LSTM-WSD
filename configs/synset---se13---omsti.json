@@ -1,8 +1,8 @@
-{"label": "synset---se2---semcor",
+{"label": "synset---se13---omsti",
 "level": "synset",
 "batch_size" : 300,
-"competition": "se2",
+"competition": "se13",
 "wn_version": "30",
-"corpora": ["semcor"],
+"corpora": ["omsti"],
 "label_propagation": false,
 "averaging_technique": "normal"}
