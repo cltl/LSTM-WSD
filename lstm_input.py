@@ -53,15 +53,15 @@ with open(exp_config['lstm_input'], 'w') as outfile:
             if a_meaning in all_meanings:
                 relevent_ids.update(ids)
 
-            for instance_id, instance_obj in instances.items():
-                if instance_id in relevent_ids:
-                    for annotation, training_example in instance_obj.sent_in_lstm_format(level=exp_config['level'],
-                                                                                         only_keep=all_meanings):
-                        stats[annotation][corpus] += 1
-                        stats[annotation]['total'] += 1
+        for instance_id, instance_obj in instances.items():
+            if instance_id in relevent_ids:
+                for annotation, training_example in instance_obj.sent_in_lstm_format(level=exp_config['level'],
+                                                                                     only_keep=all_meanings):
+                    stats[annotation][corpus] += 1
+                    stats[annotation]['total'] += 1
 
-                        if annotation in polysemous_meanings:
-                            outfile.write(instance_id + '\t' + training_example + '\n')
+                    if annotation in polysemous_meanings:
+                        outfile.write(instance_id + '\t' + training_example + '\n')
 
 pandas.to_pickle(stats, exp_config['annotated_data_stats'])
 

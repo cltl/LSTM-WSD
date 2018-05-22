@@ -4,5 +4,8 @@
   "experiments_folder" : "output",
   "semcor" : "resources/semcor_omsti/semcor",
   "omsti" : "resources/semcor_omsti/omsti",
-  "pwgc" : "resources/pwgc/ulm"
+  "pwgc" : "resources/pwgc/ulm",
+  "scorer_folder" : "resources/WSD_Unified_Evaluation_Datasets",
+  "se2_key" : "senseval2/senseval2.gold.key.txt",
+  "se13_key" : "semeval2013/semeval2013.gold.key.txt"
 }

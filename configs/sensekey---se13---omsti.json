@@ -1,0 +1,8 @@
+{"label": "sensekey---se13---omsti",
+"level": "sensekey",
+"batch_size" : 300,
+"competition": "se13",
+"wn_version": "30",
+"corpora": ["omsti"],
+"label_propagation": false,
+"averaging_technique": "normal"}

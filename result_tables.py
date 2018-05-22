@@ -82,7 +82,7 @@ def extract_settings(settings):
         corpora_used = 'SemCor'
     elif settings['corpora'] == ['omsti']:
         corpora_used = 'OMSTI'
-    elif settings == ['semcor', 'omsti']:
+    elif settings['corpora'] == ['semcor', 'omsti']:
         corpora_used = 'SemCor+OMSTI'
 
     gran = settings['level']

@@ -1,5 +1,5 @@
-{"label": "synset---se2---semcor",
-"level": "synset",
+{"label": "sensekey---se2---semcor",
+"level": "sensekey",
 "batch_size" : 300,
 "competition": "se2",
 "wn_version": "30",
