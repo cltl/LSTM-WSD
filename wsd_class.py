@@ -207,8 +207,8 @@ class WsdLstm:
                     identifier_embedding = [((instance_id, index_), embedding)
                                              for (instance_id, index_, embedding) in meaning_instances[meaning_id]]
 
-                for id_, cand_embedding in identifier_embedding
-                    cand_embedding = meaning_embeddings[meaning_id]
+                for id_, cand_embedding in identifier_embedding:
+
                     sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
 
                     if sim == highest_conf:
