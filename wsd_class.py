@@ -158,6 +158,8 @@ class WsdLstm:
                              target_index,
                              candidate_meanings,
                              meaning_embeddings,
+                             meaning_instances,
+                             method,
                              debug=0):
         """
         perform wsd on test instance from wsd competition
@@ -168,6 +170,10 @@ class WsdLstm:
         :param list candidate_meanings: list of meaning identifiers,
         each being a candidate meaning of the target token
         :param dict meaning_embeddings: mapping meaning identifier -> embedding
+        :param dict meaning_instances: mapping meaning -> list of (instance_id, target_index, target_embedding)
+        :param str method: 'averaging' | 'most_similar_instance'
+
+
         :param int debug: debug level
 
         :rtype: tuple
@@ -194,16 +200,24 @@ class WsdLstm:
 
         for meaning_id in candidate_meanings:
             if meaning_id in meaning_embeddings:
-                cand_embedding = meaning_embeddings[meaning_id]
-                sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
 
-                if sim == highest_conf:
-                    highest_meanings.append(meaning_id)
-                elif sim > highest_conf:
-                    highest_meanings = [meaning_id]
-                    highest_conf = sim
+                if method == 'averaging':
+                    identifier_embedding = [meaning_id, meaning_embeddings[meaning_id]]
+                elif method == 'most_similar_instance':
+                    identifier_embedding = [((instance_id, index_), embedding)
+                                             for (instance_id, index_, embedding) in meaning_instances[meaning_id]]
 
-                meaning2confidence[meaning_id] = sim
+                for id_, cand_embedding in identifier_embedding
+                    cand_embedding = meaning_embeddings[meaning_id]
+                    sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
+
+                    if sim == highest_conf:
+                        highest_meanings.append(meaning_id)
+                    elif sim > highest_conf:
+                        highest_meanings = [meaning_id]
+                        highest_conf = sim
+
+                    meaning2confidence[id_] = sim
 
             else:
                 if debug >= 2:
