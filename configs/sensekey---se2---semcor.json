@@ -5,4 +5,5 @@
 "wn_version": "30",
 "corpora": ["semcor"],
 "label_propagation": false,
-"averaging_technique": "normal"}
+"averaging_technique": "normal",
+"output_wsd_df_path": "output/hdn"}
