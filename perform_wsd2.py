@@ -158,18 +158,43 @@ def find_path_to_hdns(lemma):
 
 def load_tensors(sess):
     x = sess.graph.get_tensor_by_name('Model/x:0')
-    logits = sess.graph.get_tensor_by_name('Model/Max:0') # should have had a name
+    logits = sess.graph.get_tensor_by_name('Model/unmasked_logits:0') 
+    #logits = sess.graph.get_tensor_by_name('Model/Max:0') # should have had a name
     lens = sess.graph.get_tensor_by_name('Model/lens:0')
     candidates = sess.graph.get_tensor_by_name('Model/candidate_list:0')
     
     return x, logits, lens, candidates
 
+
+def disambiguate(word, embs):
+    hdn2synset = get_hdns(word)
+    hdn_list = tuple(sorted(hdn2synset))
+    cases_of_same_hdn_list = (mono_hdn_lists == hdn_list2id[hdn_list])
+    relevant_words = [id2word[i] for i in mono_words[cases_of_same_hdn_list]]
+    relevant_hdns = []
+    for w in relevant_words:
+        hypernyms = [synset2identifier(s, '30') for s in wn.synsets(w, 'n')[0].hypernym_paths()[0]]
+        rel_hdn, = [h for h in hypernyms if h in hdn2synset]
+        relevant_hdns.append(rel_hdn)
+    sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
+    hdn2score = defaultdict(float)
+    for hdn, sim in zip(relevant_hdns, sims):
+        if sim > 0:
+            hdn2score[hdn] += sim
+    return hdn2synset[max(hdn2score, key=lambda k: hdn2score[k])]
+
+
 with tf.Session() as sess:  # your session object:
 
-    path = 'output/hdn-large.2018-05-21-b1d1867-best-model'
+    # path = 'output/hdn-large.2018-05-21-b1d1867-best-model'
+    path = 'output/hdn-large.2018-05-25-e069882-best-model'
     saver = tf.train.import_meta_graph(path + '.meta', clear_devices=True)
     saver.restore(sess, path)
     x, logits, lens, candidates = load_tensors(sess)
+
+    # model_path = '../output/model-h2048p512/lstm-wsd-gigaword-google'
+    # vocab_path = '../output/vocab.2018-05-10-7d764e7.pkl'
+    # wsd_lstm_obj = WsdLstm(model_path, vocab_path, sess=sess)
 
 
     wsd_df = pandas.read_pickle(exp_config['output_wsd_df_path'])
@@ -204,6 +229,9 @@ with tf.Session() as sess:  # your session object:
             wsd_strategy = 'hdn'
             sentence_as_ids = [word2id.get(token_obj.text) or word2id['<unkn>'] for w in row.sentence_tokens]
             sentence_as_ids[target_index] = word2id['<target>']
+            sentence_as_ids.append(word2id['<eos>'])
+            
+
             hdn_list, hdn2synset = find_hdns(row.target_lemma)
             path2hdns = find_path_to_hdns(row.target_lemma) 
             if not hdn_list or hdn_list not in hdn_list2id:
@@ -214,16 +242,16 @@ with tf.Session() as sess:  # your session object:
                              lens: [len(sentence_as_ids)],
                              candidates: [-1]}
                 scores = sess.run(logits, feed_dict=feed_dict)
-                
-#                scores = [logits[0,hdn2id[hdn]] for hdn in hdn_list]
-#                meaning2confidence = {hdn2synset[hdn]: score for hdn, score in zip(hdn_list, scores)}
 
-                meaning2confidence = {}
-                for synset, path in path2hdns.items():
-                    meaning2confidence[synset] = 0
-                    for s in path:
-                        if s in hdn2id:
-                            meaning2confidence[synset] += scores[0,hdn2id[s]]
+                scores = [scores[0,hdn2id[hdn]] for hdn in hdn_list]
+                meaning2confidence = {hdn2synset[hdn]: score for hdn, score in zip(hdn_list, scores)}
+
+#                meaning2confidence = {}
+#                for synset, path in path2hdns.items():
+#                    meaning2confidence[synset] = 0
+#                    for s in path:
+#                        if s in hdn2id:
+#                            meaning2confidence[synset] += scores[0,hdn2id[s]]
 
                 highest_meaning = max(meaning2confidence, key=lambda m: meaning2confidence[m])
                 print(row.target_lemma, row.candidate_meanings, highest_meaning)
