@@ -139,7 +139,8 @@ class WsdLstm:
                 max_length = max([len(_list) for _list in annotated_sentences])
                 for _list in annotated_sentences:
                     length_diff = max_length - len(_list)
-                    [_list.append(self.vocab['<unkn>']) for _ in range(length_diff)]
+                    [_list.append(self.vocab['<pad>'])  # <pad> used to <unkn>
+                     for _ in range(length_diff)]
 
                 target_embeddings = sess.run(self.predicted_context_embs,
                                              {self.x: annotated_sentences,
@@ -202,7 +203,7 @@ class WsdLstm:
             if meaning_id in meaning_embeddings:
 
                 if method == 'averaging':
-                    identifier_embedding = [meaning_id, meaning_embeddings[meaning_id]]
+                    identifier_embedding = [(meaning_id, meaning_embeddings[meaning_id])]
                 elif method == 'most_similar_instance':
                     identifier_embedding = [((instance_id, index_), embedding)
                                              for (instance_id, index_, embedding) in meaning_instances[meaning_id]]

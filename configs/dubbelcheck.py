@@ -8,13 +8,14 @@ with open('experiments.sh', 'w') as outfile:
     outfile.write('mkdir output\n')
     for json_path in sorted(glob('*json')):
 
+
         if json_path == 'main.json':
             continue
 
         exp_config = json.load(open(json_path))
 
         label = json_path[:-5]
-        level, competition, corpora = label.split('---')
+        level, competition, corpora, *method = label.split('---')
         corpora = corpora.split('_')
 
         assert level == exp_config['level']
