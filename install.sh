@@ -28,7 +28,7 @@ pip3 install --user tensorflow
 # download annotated data
 git clone https://github.com/cltl/semcor_omsti
 cd semcor_omsti
-python convert_to_ulm.py -i SemCor -o semcor
+python3 convert_to_ulm.py -i SemCor -o semcor
 # uncomment the following line to also preload omsti (which takes a long time)
 #python convert_to_ulm.py -i OMSTI -o omsti
 

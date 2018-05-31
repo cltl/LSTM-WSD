@@ -4,6 +4,8 @@ from datetime import datetime
 from itertools import islice
 import numpy as np
 from scipy import spatial
+import wn_utils
+import json
 
 
 class WsdLstm:
@@ -244,3 +246,19 @@ class WsdLstm:
             print(rank, wsd_strategy)
 
         return (wsd_strategy, highest_meaning, meaning2confidence)
+
+
+if __name__ == '__main__':
+    main_config = json.load(open('configs/main.json'))
+
+    with tf.Session() as sess:  # your session object:
+        wsd_lstm_obj = WsdLstm(model_path=main_config['model_path'],
+                               vocab_path=main_config['vocab_path'],
+                               sess=sess)
+
+        input_ = [
+            ('the', 'the', None),
+            ('houses', 'house', 'n'),
+            ('are', 'be', 'v'),
+            ('red', 'red', 'a'),
+            ('.', '.', None)
