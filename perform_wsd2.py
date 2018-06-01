@@ -139,6 +139,7 @@ def synsets_graph_info(wn_instance, wn_version, lemma, pos):
 
 from nltk.corpus import wordnet as wn
 
+id2synset = {synset2identifier(s, '30'):s for s in wn.all_synsets('n')}
 def get_hdns(lemma):
     graph_info = synsets_graph_info(wn_instance=wn,
                                 wn_version='30',
@@ -157,6 +158,7 @@ mono_words, mono_embs, mono_hdn_lists = monos['mono_words'], monos['mono_embs'],
 
 from collections import defaultdict
 
+'''
 def disambiguate(word, embs):
     hdn2synset = get_hdns(word)
     hdn_list = tuple(sorted(hdn2synset))
@@ -178,7 +180,38 @@ def disambiguate(word, embs):
             hdn2score[hdn] += sim
     synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
     return synset2score
+'''
 
+def disambiguate(word, embs):
+    hdn2synset = get_hdns(word)
+    hdn_list = tuple(sorted(hdn2synset))
+    if hdn_list not in hdn_list2id:
+        return {}
+    cases_of_same_hdn_list = (mono_hdn_lists == hdn_list2id[hdn_list])
+    if not np.any(cases_of_same_hdn_list):
+        return {}
+    relevant_words = [id2word[i] for i in mono_words[cases_of_same_hdn_list]]
+    relevant_mono_synsets = []
+    for w in relevant_words:
+        s, = wn.synsets(w, 'n')
+        relevant_mono_synsets.append(s)
+
+    relevant_hdns, relevant_synsets = [], []
+    for w in relevant_words:
+        hypernyms = [synset2identifier(s, '30') for s in wn.synsets(w, 'n')[0].hypernym_paths()[0]]
+        rel_hdn, = [h for h in hypernyms if h in hdn2synset]
+        relevant_hdns.append(rel_hdn)
+        relevant_synsets.append(hdn2synset[rel_hdn])
+
+    synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
+                          for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
+    sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
+    hdn2score = defaultdict(float)
+    for hdn, sim1, sim2 in zip(relevant_hdns, sims, synset2synset_sims):
+        if sim1 > 0:
+            hdn2score[hdn] += sim1*sim2
+    synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
+    return synset2score
 
 with tf.Session() as sess:  # your session object:
 
