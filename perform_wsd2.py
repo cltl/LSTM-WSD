@@ -198,19 +198,22 @@ def disambiguate(word, embs):
 
     relevant_hdns, relevant_synsets = [], []
     for w in relevant_words:
-        hypernyms = [synset2identifier(s, '30') for s in wn.synsets(w, 'n')[0].hypernym_paths()[0]]
+        hypernyms = [synset2identifier(s, '30') 
+                     for s in wn.synsets(w, 'n')[0].hypernym_paths()[0]]
         rel_hdn, = [h for h in hypernyms if h in hdn2synset]
         relevant_hdns.append(rel_hdn)
         relevant_synsets.append(hdn2synset[rel_hdn])
 
     synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
                           for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
-    sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
+    embeddings_sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
     hdn2score = defaultdict(list)
-    for hdn, sim1, sim2 in zip(relevant_hdns, sims, synset2synset_sims):
+    for hdn, sim1, sim2 in zip(relevant_hdns, embeddings_sims, synset2synset_sims):
         if sim1 > 0:
-            hdn2score[hdn].append(sim1*sim2)
-    hdn2score = {k:np.mean(v) for k, v in hdn2score.items()}
+            hdn2score[hdn].append([sim1, sim2])
+    for hdn in hdn2score:
+        sims1, sims2 = zip(*hdn2score[hdn])
+        hdn2score[hdn] = np.average(sims1, weights=sims2) 
     synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
     return synset2score
 
@@ -276,7 +279,7 @@ with tf.Session() as sess:  # your session object:
 #                                                                    candidate_meanings=row.candidate_meanings,
 #                                                                    meaning_embeddings=meanings,
 #                                                                    debug=2)
-#             meaning2confidence = {id_: (val or meaning2confidence1[id_])
+#             meaning2confidence = {id_: (val or meaning2confidence1.get(id_) or 0.0)
 #                                   for id_, val in meaning2confidence2.items()}
             
             if meaning2confidence:
