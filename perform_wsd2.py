@@ -228,6 +228,7 @@ with tf.Session() as sess:  # your session object:
 
     wsd_df = pandas.read_pickle(exp_config['output_wsd_df_path'])
 
+    meanings = pandas.read_pickle(exp_config['meanings_path'])
     meaning_freqs = pandas.read_pickle(exp_config['annotated_data_stats'])
 
     colums_to_add = ['lstm_acc', 'emb_freq', 'wsd_strategy', 'lstm_output']
@@ -263,28 +264,18 @@ with tf.Session() as sess:  # your session object:
             
             embs = wsd_lstm_obj.apply_model(sess, [sentence_as_ids], [len(sentence_as_ids)])[0]
             word = row.sentence_tokens[target_index].text
-            meaning2confidence = disambiguate(word, embs)
-
-#            hdn_list, hdn2synset = find_hdns(row.target_lemma)
-#            path2hdns = find_path_to_hdns(row.target_lemma) 
-#            if not hdn_list or hdn_list not in hdn_list2id:
-#                highest_meaning = row.candidate_meanings[0]        
-#                print('Ignored: ', row.target_lemma, row.candidate_meanings)
-#            else: 
-#                feed_dict = {x: [sentence_as_ids],
-#                             lens: [len(sentence_as_ids)],
-#                             candidates: [-1]}
-#                scores = sess.run(logits, feed_dict=feed_dict)
-#
-#                scores = [scores[0,hdn2id[hdn]] for hdn in hdn_list]
-#                meaning2confidence = {hdn2synset[hdn]: score for hdn, score in zip(hdn_list, scores)}
-#
-#                meaning2confidence = {}
-#                for synset, path in path2hdns.items():
-#                    meaning2confidence[synset] = 0
-#                    for s in path:
-#                        if s in hdn2id:
-#                            meaning2confidence[synset] += scores[0,hdn2id[s]]
+            meaning2confidence1 = disambiguate(word, embs)
+            wsd_strategy, \
+            highest_meaning, \
+            meaning2confidence2 = wsd_lstm_obj.wsd_on_test_instance(sess=sess,
+                                                                   sentence_tokens=row.sentence_tokens,
+                                                                   target_index=target_index,
+                                                                   candidate_meanings=row.candidate_meanings,
+                                                                   meaning_embeddings=meanings,
+                                                                   debug=2)
+            meaning2confidence = {id_: (val or meaning2confidence1[id_])
+                                  for id_, val in meaning2confidence2.items()}
+            
             if meaning2confidence:
                 highest_meaning = max(meaning2confidence, key=lambda m: meaning2confidence[m])
                 if highest_meaning in row.synset2sensekey:

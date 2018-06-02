@@ -1,6 +1,6 @@
 {
-  "vocab_path" : "/var/scratch/mcpostma/wsd-dynamic-sense-vector/evaluate/resources/model-h2048p512/gigaword-lstm-wsd.index.pkl",
-  "model_path" : "/var/scratch/mcpostma/wsd-dynamic-sense-vector/evaluate/resources/model-h2048p512/lstm-wsd-gigaword-google",
+  "vocab_path" : "output/model-h2048p512/gigaword-lstm-wsd.index.pkl",
+  "model_path" : "output/model-h2048p512/lstm-wsd-gigaword-google",
   "experiments_folder" : "output",
   "semcor" : "resources/semcor_omsti/semcor",
   "omsti" : "resources/semcor_omsti/omsti",
