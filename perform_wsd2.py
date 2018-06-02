@@ -206,10 +206,11 @@ def disambiguate(word, embs):
     synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
                           for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
     sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
-    hdn2score = defaultdict(float)
+    hdn2score = defaultdict(list)
     for hdn, sim1, sim2 in zip(relevant_hdns, sims, synset2synset_sims):
         if sim1 > 0:
-            hdn2score[hdn] += sim1*sim2
+            hdn2score[hdn].append(sim1*sim2)
+    hdn2score = {k:np.mean(v) for k, v in hdn2score.items()}
     synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
     return synset2score
 
@@ -265,16 +266,18 @@ with tf.Session() as sess:  # your session object:
             embs = wsd_lstm_obj.apply_model(sess, [sentence_as_ids], [len(sentence_as_ids)])[0]
             word = row.sentence_tokens[target_index].text
             meaning2confidence1 = disambiguate(word, embs)
-            wsd_strategy, \
-            highest_meaning, \
-            meaning2confidence2 = wsd_lstm_obj.wsd_on_test_instance(sess=sess,
-                                                                   sentence_tokens=row.sentence_tokens,
-                                                                   target_index=target_index,
-                                                                   candidate_meanings=row.candidate_meanings,
-                                                                   meaning_embeddings=meanings,
-                                                                   debug=2)
-            meaning2confidence = {id_: (val or meaning2confidence1[id_])
-                                  for id_, val in meaning2confidence2.items()}
+            print(meaning2confidence1)
+            meaning2confidence = meaning2confidence1
+#             wsd_strategy, \
+#             highest_meaning, \
+#             meaning2confidence2 = wsd_lstm_obj.wsd_on_test_instance(sess=sess,
+#                                                                    sentence_tokens=row.sentence_tokens,
+#                                                                    target_index=target_index,
+#                                                                    candidate_meanings=row.candidate_meanings,
+#                                                                    meaning_embeddings=meanings,
+#                                                                    debug=2)
+#             meaning2confidence = {id_: (val or meaning2confidence1[id_])
+#                                   for id_, val in meaning2confidence2.items()}
             
             if meaning2confidence:
                 highest_meaning = max(meaning2confidence, key=lambda m: meaning2confidence[m])
