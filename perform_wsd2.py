@@ -203,19 +203,27 @@ def disambiguate(word, embs):
         rel_hdn, = [h for h in hypernyms if h in hdn2synset]
         relevant_hdns.append(rel_hdn)
         relevant_synsets.append(hdn2synset[rel_hdn])
-
-    synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
-                          for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
-    embeddings_sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
-    hdn2score = defaultdict(list)
-    for hdn, sim1, sim2 in zip(relevant_hdns, embeddings_sims, synset2synset_sims):
-        if sim1 > 0:
-            hdn2score[hdn].append([sim1, sim2])
-    for hdn in hdn2score:
-        sims1, sims2 = zip(*hdn2score[hdn])
-        hdn2score[hdn] = np.average(sims1, weights=sims2) 
-    synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
+    relevant_embs = mono_embs[cases_of_same_hdn_list]
+    
+    synset2embs = defaultdict(list)
+    for s, e in zip(relevant_synsets, relevant_embs):
+        synset2embs[s].append(e)
+    synset2score = {s: sum(embs_list)/len(embs_list)
+                    for s, embs_list in synset2embs.items()}
     return synset2score
+
+#     synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
+#                           for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
+#     embeddings_sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
+#     hdn2score = defaultdict(list)
+#     for hdn, sim1, sim2 in zip(relevant_hdns, embeddings_sims, synset2synset_sims):
+#         if sim1 > 0:
+#             hdn2score[hdn].append([sim1, sim2])
+#     for hdn in hdn2score:
+#         sims1, sims2 = zip(*hdn2score[hdn])
+#         hdn2score[hdn] = np.average(sims1, weights=sims2) 
+#     synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
+#     return synset2score
 
 with tf.Session() as sess:  # your session object:
 
@@ -225,14 +233,15 @@ with tf.Session() as sess:  # your session object:
     # saver.restore(sess, path)
     # x, logits, lens, candidates = load_tensors(sess)
 
-    model_path = 'output/model-h2048p512/lstm-wsd-gigaword-google'
-    vocab_path = 'output/vocab.2018-05-10-7d764e7.pkl'
-    wsd_lstm_obj = WsdLstm(model_path, vocab_path, sess=sess)
+    wsd_lstm_obj = WsdLstm(model_path=main_config['model_path'],
+                           vocab_path=main_config['vocab_path'],
+                           sess=sess)
 
 
     wsd_df = pandas.read_pickle(exp_config['output_wsd_df_path'])
 
-    meanings = pandas.read_pickle(exp_config['meaning_instances_path'])
+#     meanings = pandas.read_pickle(exp_config['meaning_instances_path'])
+    meanings = pandas.read_pickle(exp_config['meanings_path'])
     meaning_freqs = pandas.read_pickle(exp_config['annotated_data_stats'])
 
     colums_to_add = ['lstm_acc', 'emb_freq', 'wsd_strategy', 'lstm_output']
