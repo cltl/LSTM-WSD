@@ -204,26 +204,18 @@ def disambiguate(word, embs):
         relevant_hdns.append(rel_hdn)
         relevant_synsets.append(hdn2synset[rel_hdn])
     relevant_embs = mono_embs[cases_of_same_hdn_list]
-    
-    synset2embs = defaultdict(list)
-    for s, e in zip(relevant_synsets, relevant_embs):
-        synset2embs[s].append(e)
-    synset2score = {s: sum(embs_list)/len(embs_list)
-                    for s, embs_list in synset2embs.items()}
+    synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
+                          for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
+    embeddings_sims = cosine_similarity([embs], relevant_embs)[0]
+    hdn2score = defaultdict(list)
+    for hdn, sim1, sim2 in zip(relevant_hdns, embeddings_sims, synset2synset_sims):
+        if sim1 > 0:
+            hdn2score[hdn].append([sim1, sim2])
+    for hdn in hdn2score:
+        sims1, sims2 = zip(*hdn2score[hdn])
+        hdn2score[hdn] = np.average(sims1, weights=sims2) 
+    synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
     return synset2score
-
-#     synset2synset_sims = [s1.wup_similarity(id2synset[s2]) 
-#                           for s1, s2 in zip(relevant_mono_synsets, relevant_synsets)]
-#     embeddings_sims = cosine_similarity([embs], mono_embs[cases_of_same_hdn_list])[0]
-#     hdn2score = defaultdict(list)
-#     for hdn, sim1, sim2 in zip(relevant_hdns, embeddings_sims, synset2synset_sims):
-#         if sim1 > 0:
-#             hdn2score[hdn].append([sim1, sim2])
-#     for hdn in hdn2score:
-#         sims1, sims2 = zip(*hdn2score[hdn])
-#         hdn2score[hdn] = np.average(sims1, weights=sims2) 
-#     synset2score = {hdn2synset[hdn]: score for hdn, score in hdn2score.items()}
-#     return synset2score
 
 with tf.Session() as sess:  # your session object:
 
@@ -277,8 +269,8 @@ with tf.Session() as sess:  # your session object:
             
             embs = wsd_lstm_obj.apply_model(sess, [sentence_as_ids], [len(sentence_as_ids)])[0]
             word = row.sentence_tokens[target_index].text
-#             meaning2confidence1 = disambiguate(word, embs)
-#             print(meaning2confidence1)
+            meaning2confidence1 = disambiguate(word, embs)
+            print(meaning2confidence1)
 #             meaning2confidence = meaning2confidence1
             wsd_strategy, \
             highest_meaning, \
@@ -290,9 +282,9 @@ with tf.Session() as sess:  # your session object:
                                                                    debug=2)
             print(meaning2confidence2)
             meaning2confidence = meaning2confidence2
-#             trust_factor = 1
-#             meaning2confidence = {id_: (val or trust_factor*meaning2confidence1.get(id_, 0.0))
-#                                   for id_, val in meaning2confidence2.items()}
+            trust_factor = 0.5
+            meaning2confidence = {id_: (val or trust_factor*meaning2confidence1.get(id_, 0.0))
+                                  for id_, val in meaning2confidence2.items()}
             
             if meaning2confidence:
                 highest_meaning = max(meaning2confidence, key=lambda m: meaning2confidence[m])
