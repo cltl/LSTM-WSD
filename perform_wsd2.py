@@ -240,8 +240,8 @@ with tf.Session() as sess:  # your session object:
 
     wsd_df = pandas.read_pickle(exp_config['output_wsd_df_path'])
 
-#     meanings = pandas.read_pickle(exp_config['meaning_instances_path'])
-    meanings = pandas.read_pickle(exp_config['meanings_path'])
+    meanings = pandas.read_pickle(exp_config['meaning_instances_path'])
+#     meanings = pandas.read_pickle(exp_config['meanings_path'])
     meaning_freqs = pandas.read_pickle(exp_config['annotated_data_stats'])
 
     colums_to_add = ['lstm_acc', 'emb_freq', 'wsd_strategy', 'lstm_output']

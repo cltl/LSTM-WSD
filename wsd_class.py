@@ -194,17 +194,17 @@ class WsdLstm:
 
         for meaning_id in candidate_meanings:
             if meaning_id in meaning_embeddings:
-                cand_embedding = meaning_embeddings[meaning_id]
-                sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
-#                 cand_embeddings = [embs for _, _, embs in meaning_embeddings[meaning_id]]
-#                 from sklearn.metrics.pairwise import cosine_similarity
-# #                 sims = cosine_similarity([target_embedding], cand_embeddings)[0]
-# #                 cand_embeddings = [e for e, s in zip(cand_embeddings, sims) if s > 0]
-#                 if len(cand_embeddings) > 0:
-#                     cand_embedding = sum(cand_embeddings) / len(cand_embeddings)
-#                     sim = cosine_similarity([target_embedding], [cand_embedding])[0,0]
-#                 else:
-#                     sim = 0.0
+#                 cand_embedding = meaning_embeddings[meaning_id]
+#                 sim = 1 - spatial.distance.cosine(cand_embedding, target_embedding)
+                cand_embeddings = [embs for _, _, embs in meaning_embeddings[meaning_id]]
+                from sklearn.metrics.pairwise import cosine_similarity
+                sims = cosine_similarity([target_embedding], cand_embeddings)[0]
+                cand_embeddings = [e for e, s in zip(cand_embeddings, sims) if s > 0]
+                if len(cand_embeddings) > 0:
+                    cand_embedding = sum(cand_embeddings) / len(cand_embeddings)
+                    sim = cosine_similarity([target_embedding], [cand_embedding])[0,0]
+                else:
+                    sim = 0.0
                 if sim == highest_conf:
                     highest_meanings.append(meaning_id)
                 elif sim > highest_conf:
