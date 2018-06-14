@@ -78,4 +78,3 @@ sense_embedding_stats_path = os.path.join(exp_config['exp_output_folder'],
 with open(sense_embedding_stats_path, 'w') as outfile:
     outfile.write('number of target embeddings: %s\n' % num_target_embeddings)
     outfile.write('number of meanings: %s\n' % len(meaning2avg_embedding))
-

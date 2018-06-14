@@ -22,7 +22,7 @@ def update_settings_with_paths(main_config, exp_config):
 
     # input wsd df
     competition = exp_config['competition']
-    assert competition in {'se2', 'se13'}, 'competition %s not supported'
+    assert competition in {'se2', 'se13', 'all'}, 'competition %s not supported'
     wsd_df_path = 'resources/{competition}-aw-framework.p'.format_map(locals())
     exp_config['wsd_df_path'] = wsd_df_path
 
@@ -59,10 +59,11 @@ def update_settings_with_paths(main_config, exp_config):
     exp_config['system_path'] = os.path.join(exp_config['exp_output_folder'],
                                              'system.key')
 
-    exp_config['key_path'] = main_config['%s_key' % competition]
+    if competition != 'all':
+        exp_config['key_path'] = main_config['%s_key' % competition]
 
-    exp_config['json_results_path'] = os.path.join(exp_config['exp_output_folder'],
-                                                   'wsd_framework_results.json')
+        exp_config['json_results_path'] = os.path.join(exp_config['exp_output_folder'],
+                                                       'wsd_framework_results.json')
 
 
 

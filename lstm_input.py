@@ -29,13 +29,15 @@ path_exp_config = '%s/%s/settings.json' % (main_config['experiments_folder'],
                                            arguments['--exp'])
 exp_config = json.load(open(path_exp_config))
 
-all_meanings = pandas.read_pickle(exp_config['candidates_path'])
-polysemous_meanings = pandas.read_pickle(exp_config['polysemous_candidates_path'])
+
+if exp_config['competition'] == 'all':
+    all_meanings = set()
+    polysemous_meanings = set()
+elif exp_config['competition'] in {'se2', 'se13'}:
+    all_meanings = pandas.read_pickle(exp_config['candidates_path'])
+    polysemous_meanings = pandas.read_pickle(exp_config['polysemous_candidates_path'])
 
 stats = dict()
-for relevant_meaning in all_meanings:
-    if relevant_meaning not in stats:
-        stats[relevant_meaning] = defaultdict(int)
 
 with open(exp_config['lstm_input'], 'w') as outfile:
     for corpus in exp_config['corpora']:
@@ -50,17 +52,25 @@ with open(exp_config['lstm_input'], 'w') as outfile:
         # relevant ids
         relevent_ids = set()
         for a_meaning, ids in meaning2ids.items():
-            if a_meaning in all_meanings:
+            if exp_config['competition'] == 'all':
+                relevent_ids.update(ids)
+            elif a_meaning in all_meanings:
                 relevent_ids.update(ids)
 
         for instance_id, instance_obj in instances.items():
             if instance_id in relevent_ids:
                 for annotation, training_example in instance_obj.sent_in_lstm_format(level=exp_config['level'],
                                                                                      only_keep=all_meanings):
+
+                    if annotation not in stats:
+                        stats[annotation] = defaultdict(int)
+
                     stats[annotation][corpus] += 1
                     stats[annotation]['total'] += 1
 
-                    if annotation in polysemous_meanings:
+                    if exp_config['competition'] == 'all':
+                        outfile.write(instance_id + '\t' + training_example + '\n')
+                    elif annotation in polysemous_meanings:
                         outfile.write(instance_id + '\t' + training_example + '\n')
 
 pandas.to_pickle(stats, exp_config['annotated_data_stats'])

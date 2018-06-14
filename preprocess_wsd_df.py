@@ -114,40 +114,43 @@ exp_config = json.load(open(path_exp_config))
 
 load_utils.update_settings_with_paths(main_config=main_config,
                                       exp_config=exp_config)
-wsd_df = pandas.read_pickle(exp_config['wsd_df_path'])
 
 
-wn_version = exp_config['wn_version']
-level = exp_config['level']
+if exp_config['competition'] != 'all':
+
+    wsd_df = pandas.read_pickle(exp_config['wsd_df_path'])
+
+    wn_version = exp_config['wn_version']
+    level = exp_config['level']
 
 
-wsd_df, all_polysemous_candidate_meanings, all_candidate_meanings = update_wsd_df(wsd_df=wsd_df,
-                                                                                  wn_version=wn_version,
-                                                                                  level=level)
+    wsd_df, all_polysemous_candidate_meanings, all_candidate_meanings = update_wsd_df(wsd_df=wsd_df,
+                                                                                      wn_version=wn_version,
+                                                                                      level=level)
 
-assert len(all_polysemous_candidate_meanings) < len(all_candidate_meanings)
+    assert len(all_polysemous_candidate_meanings) < len(all_candidate_meanings)
 
-pandas.to_pickle(wsd_df,
-                 exp_config['output_wsd_df_path'])
+    pandas.to_pickle(wsd_df,
+                     exp_config['output_wsd_df_path'])
 
-pandas.to_pickle(all_polysemous_candidate_meanings,
-                 exp_config['polysemous_candidates_path'])
+    pandas.to_pickle(all_polysemous_candidate_meanings,
+                     exp_config['polysemous_candidates_path'])
 
-pandas.to_pickle(all_candidate_meanings,
-                 exp_config['candidates_path'])
-
-
-stats_path = os.path.join(exp_config['exp_output_folder'],
-                          'preprocess_stats.txt')
-with open(stats_path, 'w') as outfile:
-    outfile.write('# rows wsd df: %s\n' % len(wsd_df))
-    outfile.write('# polysemous candidate meanings: %s\n' % len(all_polysemous_candidate_meanings))
-    outfile.write('# candidate meanings: %s\n' % len(all_candidate_meanings))
+    pandas.to_pickle(all_candidate_meanings,
+                     exp_config['candidates_path'])
 
 
-# asserts
-for row in wsd_df.itertuples():
-    assert row.candidate_meanings
+    stats_path = os.path.join(exp_config['exp_output_folder'],
+                              'preprocess_stats.txt')
+    with open(stats_path, 'w') as outfile:
+        outfile.write('# rows wsd df: %s\n' % len(wsd_df))
+        outfile.write('# polysemous candidate meanings: %s\n' % len(all_polysemous_candidate_meanings))
+        outfile.write('# candidate meanings: %s\n' % len(all_candidate_meanings))
+
+
+    # asserts
+    for row in wsd_df.itertuples():
+        assert row.candidate_meanings
 
 # write updated experiment config to file
 output_path_config = os.path.join(exp_config['exp_output_folder'],
