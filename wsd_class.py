@@ -180,7 +180,7 @@ class WsdLstm:
         :param int debug: debug level
 
         :rtype: tuple
-        :return: (wsd_strategy, chosen_meaning, meaning2cosine)
+        :return: (wsd_strategy, chosen_meaning, meaning2cosine, target_embedding)
         """
         sentence_as_ids = [self.vocab.get(token_obj.text) or self.vocab['<unkn>']
                            for token_obj in sentence_tokens]
@@ -245,7 +245,7 @@ class WsdLstm:
             print(candidate_meanings)
             print(rank, wsd_strategy)
 
-        return (wsd_strategy, highest_meaning, meaning2confidence)
+        return (wsd_strategy, highest_meaning, meaning2confidence, target_embedding)
 
 
 if __name__ == '__main__':

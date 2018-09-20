@@ -1,8 +1,8 @@
-{"label": "synset---se13---semcor",
+{"label": "synset---all---semcor",
 "level": "synset",
 "batch_size" : 300,
-"competition": "se13",
+"competition": "all",
 "wn_version": "30",
 "corpora": ["semcor"],
 "label_propagation": false,
-"wsd_technique": "averaging"}
+"averaging_technique": "normal"}

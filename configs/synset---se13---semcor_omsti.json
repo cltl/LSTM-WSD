@@ -5,4 +5,4 @@
 "wn_version": "30",
 "corpora": ["semcor", "omsti"],
 "label_propagation": false,
-"averaging_technique": "normal"}
+"wsd_technique": "averaging"}

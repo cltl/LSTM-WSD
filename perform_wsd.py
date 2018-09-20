@@ -40,7 +40,7 @@ with tf.Session() as sess:  # your session object:
     meaning_instances = pandas.read_pickle(exp_config['meaning_instances_path'])
     meaning_freqs = pandas.read_pickle(exp_config['annotated_data_stats'])
 
-    colums_to_add = ['lstm_acc', 'emb_freq', 'wsd_strategy', 'lstm_output']
+    colums_to_add = ['lstm_acc', 'emb_freq', 'wsd_strategy', 'lstm_output', 'target_embedding']
     for colum_to_add in colums_to_add:
         wsd_df[colum_to_add] = [None for _ in range(len(wsd_df))]
 
@@ -66,14 +66,15 @@ with tf.Session() as sess:  # your session object:
         # apply wsd
         wsd_strategy, \
         highest_meaning, \
-        meaning2confidence = wsd_lstm_obj.wsd_on_test_instance(sess=sess,
-                                                               sentence_tokens=row.sentence_tokens,
-                                                               target_index=target_index,
-                                                               candidate_meanings=row.candidate_meanings,
-                                                               meaning_embeddings=meanings,
-                                                               meaning_instances=meaning_instances,
-                                                               method=exp_config['wsd_technique'],
-                                                               debug=2)
+        meaning2confidence, \
+        target_embedding = wsd_lstm_obj.wsd_on_test_instance(sess=sess,
+                                                             sentence_tokens=row.sentence_tokens,
+                                                             target_index=target_index,
+                                                             candidate_meanings=row.candidate_meanings,
+                                                             meaning_embeddings=meanings,
+                                                             meaning_instances=meaning_instances,
+                                                             method=exp_config['wsd_technique'],
+                                                             debug=2)
 
         # score it
         if exp_config['level'] == 'synset':
@@ -85,6 +86,7 @@ with tf.Session() as sess:  # your session object:
         wsd_df.set_value(df_index, col='lstm_acc', value=lstm_acc)
         wsd_df.set_value(df_index, col='wsd_strategy', value=wsd_strategy)
         wsd_df.set_value(df_index, col='emb_freq', value=emb_freq)
+        wsd_df.set_value(df_index, col='target_embedding', value=target_embedding)
 
         if lstm_acc:
             correct += 1

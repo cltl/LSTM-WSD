@@ -1,8 +1,8 @@
-{"label": "sensekey---se2---semcor",
+{"label": "sensekey---se2---semcor---instance",
 "level": "sensekey",
 "batch_size" : 300,
 "competition": "se2",
 "wn_version": "30",
 "corpora": ["semcor"],
 "label_propagation": false,
-"wsd_technique": "averaging"}
+"wsd_technique": "most_similar_instance"}

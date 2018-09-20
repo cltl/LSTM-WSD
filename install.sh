@@ -17,8 +17,8 @@ javac Scorer.java
 cd ..
 
 # download model
-#wget http://kyoto.let.vu.nl/~minh/wsd/model-h2048p512.zip
-#unzip model-h2048p512.zip
+wget http://kyoto.let.vu.nl/~minh/wsd/model-h2048p512.zip
+unzip model-h2048p512.zip
 
 # install modules
 pip3 install --user numpy
