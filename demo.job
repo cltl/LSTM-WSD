@@ -9,4 +9,4 @@ module load cuda80/blas
 module load cuda80
 module load cuDNN/cuda80/6.0.21
 
-python demo.py
+python demo.py --sentence='the man walks to the garden.'
