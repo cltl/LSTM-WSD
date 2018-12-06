@@ -1,6 +1,10 @@
 cd ..
 rm -rf output
+rm -rf jobs
+
 mkdir output
+mkdir jobs
+
 sbatch --time=04:00:00 --output=jobs/sensekey---se13---omsti one_experiment.sh sensekey---se13---omsti
 sbatch --time=04:00:00 --output=jobs/sensekey---se13---semcor one_experiment.sh sensekey---se13---semcor
 sbatch --time=04:00:00 --output=jobs/sensekey---se13---semcor_omsti one_experiment.sh sensekey---se13---semcor_omsti
@@ -16,4 +20,4 @@ sbatch --time=04:00:00 --output=jobs/synset---se2---semcor---instance one_experi
 sbatch --time=04:00:00 --output=jobs/synset---se2---semcor one_experiment.sh synset---se2---semcor
 sbatch --time=04:00:00 --output=jobs/synset---se2---semcor_omsti one_experiment.sh synset---se2---semcor_omsti
 
-#sbatch --time=04:00:00 --output=jobs/synset---all---semcor one_experiment.sh synset---all---semcor
+
